@@ -6,6 +6,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+function validateRating(rating) {
+  if (rating === undefined || rating === null) {
+    return { valid: false, error: 'Rating is required' };
+  }
+
+  if (typeof rating !== 'number' || Number.isNaN(rating)) {
+    return { valid: false, error: 'Rating must be a number' };
+  }
+
+  if (!Number.isInteger(rating)) {
+    return { valid: false, error: 'Rating must be a whole number' };
+  }
+
+  if (rating < 1 || rating > 5) {
+    return { valid: false, error: 'Rating must be between 1 and 5' };
+  }
+
+  return { valid: true };
+}
+
 app.get('/health', (req, res) =>
   res.json({ status: 'ok', service: 'menu-service', port: 3002 })
 );
@@ -29,6 +49,15 @@ app.get('/api/menu/category/:cat', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3002;
-app.listen(PORT, () =>
-  console.log(`[menu-service] Running on http://localhost:${PORT}`)
-);
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () =>
+    console.log(`[menu-service] Running on http://localhost:${PORT}`)
+  );
+}
+
+// ===== EXPORT FOR TESTING (add at bottom of file) =====
+// Only exports when Jest sets NODE_ENV=test
+// Production server is unaffected
+if (process.env.NODE_ENV === 'test') {
+  module.exports = { app, validateRating };
+}

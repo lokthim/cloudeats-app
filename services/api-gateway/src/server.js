@@ -47,6 +47,7 @@ function proxy(target) {
   return createProxyMiddleware({
     target,
     changeOrigin: true,
+    pathRewrite: (path, req) => req.originalUrl,
     on: {
       error: (err, req, res) => {
         res.status(503).json({
