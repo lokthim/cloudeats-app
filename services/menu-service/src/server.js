@@ -28,7 +28,31 @@ app.get('/api/menu/category/:cat', async (req, res) => {
   // copy from server.js.monolith (if exists)
 });
 
+// ===== RATING VALIDATION (add above app.listen) =====
+function validateRating(rating) {
+  if (rating === undefined || rating === null) {
+    return { valid: false, error: 'Rating is required' };
+  }
+  if (typeof rating !== 'number') {
+    return { valid: false, error: 'Rating must be a number' };
+  }
+  if (!Number.isInteger(rating)) {
+    return { valid: false, error: 'Rating must be a whole number' };
+  }
+  if (rating < 1 || rating > 5) {
+    return { valid: false, error: 'Rating must be between 1 and 5' };
+  }
+  return { valid: true };
+}
+
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () =>
   console.log(`[menu-service] Running on http://localhost:${PORT}`)
 );
+
+// ===== EXPORT FOR TESTING (add at bottom of file) =====
+// Only exports when Jest sets NODE_ENV=test
+// Production server is unaffected
+if (process.env.NODE_ENV === 'test') {
+  module.exports = { validateRating };
+}
