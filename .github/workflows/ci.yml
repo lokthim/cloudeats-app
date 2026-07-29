@@ -43,38 +43,38 @@ jobs:
           NODE_ENV: test    # enables module.exports in server.js
         run: npm test
 
-deploy:
-  name: Deploy to VM
-  runs-on: ubuntu-latest
-  needs: test                  # only run if test job passes
-  if: github.ref == 'refs/heads/main'  # only deploy from main branch
+  deploy:
+    name: Deploy to VM
+    runs-on: ubuntu-latest
+    needs: test                  # only run if test job passes
+    if: github.ref == 'refs/heads/main'  # only deploy from main branch
 
-  steps:
-    - name: Deploy CloudEats to VM
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host:     ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USER }}
-        key:      ${{ secrets.DEPLOY_KEY }}
-        port:     22
-        script: |
-          cd ~/cloudeats-app
+    steps:
+      - name: Deploy CloudEats to VM
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host:     ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key:      ${{ secrets.DEPLOY_KEY }}
+          port:     22
+          script: |
+            cd ~/cloudeats-app
 
-          echo "=== Pulling latest code ==="
-          git pull origin main
+            echo "=== Pulling latest code ==="
+            git pull origin main
 
-          echo "=== Building updated services ==="
-          docker compose build user-service menu-service order-service api-gateway
+            echo "=== Building updated services ==="
+            docker compose build user-service menu-service order-service api-gateway
 
-          echo "=== Deploying with zero downtime ==="
-          docker compose up -d --no-deps user-service
-          docker compose up -d --no-deps menu-service
-          docker compose up -d --no-deps order-service
-          docker compose up -d --no-deps api-gateway
+            echo "=== Deploying with zero downtime ==="
+            docker compose up -d --no-deps user-service
+            docker compose up -d --no-deps menu-service
+            docker compose up -d --no-deps order-service
+            docker compose up -d --no-deps api-gateway
 
-          echo "=== Health check ==="
-          sleep 10
-          curl -f http://localhost:8000/api/menu/health || exit 1
+            echo "=== Health check ==="
+            sleep 10
+            curl -f http://localhost:8000/api/menu/health || exit 1
 
-          echo "=== Deployment complete ✅ ==="
-          docker compose ps
+            echo "=== Deployment complete ✅ ==="
+            docker compose ps
